@@ -56,10 +56,17 @@ let
     configuration = lib.nixosSystem {
       inherit lib; # HACK: nixpkgs 23.11 does not auto include here lib from which `nixosSystem` is called
       modules = [
-        ({ pkgs, ... }: {
-          networking.hostName = name;
-          nixpkgs.overlays = [ (defaultOverlay pkgs) ] ++ overlays;
-          nixpkgs.hostPlatform = hostPlatform;
+        ({ pkgs, lib, ... }: {
+          options.grizz.settings = lib.mkOption {
+            type = lib.types.attrsOf lib.types.unspecified;
+            default = {};
+          };
+          config = {
+            networking.hostName = name;
+            nixpkgs.overlays = [ (defaultOverlay pkgs) ] ++ overlays;
+            nixpkgs.hostPlatform = hostPlatform;
+            grizz.settings = settings;
+          };
         })
       ]
       ++ lib.optional (buildPlatform != null) { nixpkgs.buildPlatform = buildPlatform; }
