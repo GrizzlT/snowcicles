@@ -1,10 +1,16 @@
 {
   description = "Modular configs/envs/package setups";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+  outputs = { self, nixpkgs, ... }@inputs: let
+    lib = import ./lib inputs;
+  in {
+    inherit lib;
+
+    nixosConfigurations.test = lib.mkNixOS "test" {};
   };
 
-  outputs = { self, nixpkgs }: {
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+    unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 }
