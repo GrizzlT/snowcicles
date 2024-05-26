@@ -4,7 +4,11 @@
   outputs = { self, nixpkgs, ... }@inputs: let
     lib = import ./lib inputs;
 
-    mkNixOS = lib.mkNixOSes {};
+    mkNixOS = lib.mkNixOSes {
+      defaultAttrHook = _: name: _: {
+        grizz.testCheck = "${name}qsmdlfkj";
+      };
+    };
   in {
     inherit lib;
 
@@ -16,5 +20,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    agenix.url = "github:ryantm/agenix";
   };
 }

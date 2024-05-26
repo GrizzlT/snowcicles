@@ -26,14 +26,14 @@ let
     };
 
     # all modules to include by default
-    modules = [
-
-    ] ++ (settings.modules or []);
+    modules = []
+      ++ (lib.optional settings.agenix or true inputs.agenix.nixosModules.default)
+      ++ (settings.modules or []);
 
     # overlays to be applied to nixpkgs
-    overlays = [
-
-    ] ++ (settings.overlays or []);
+    overlays = []
+      ++ (lib.optional settings.agenix or true inputs.agenix.overlays.default)
+      ++ (settings.overlays or []);
 
     # cross compilation support
     hostPlatform = settings.system or (settings.hostPlatform or { system = "x86_64-linux"; });
@@ -54,7 +54,7 @@ let
     ];
 
     configuration = lib.nixosSystem {
-      inherit lib; # HACK: this version of nixpkgs doesn't include lib from which `nixosSystem` is called
+      inherit lib; # HACK: nixpkgs 23.11 does not auto include here lib from which `nixosSystem` is called
       modules = [
         ({ pkgs, ... }: {
           networking.hostName = name;
@@ -67,20 +67,35 @@ let
     };
   in withExtraAttrs configuration;
 
+  # General wrapper for downstream usage
+  #
+  # Applies defaults per configuration set. This option allows for parametrized
+  # defaults based on the configuration name and the entire set.
   mkNixOSes = {
-    defaultAttrHook ? (all: _: {}),
-    defaultModules ? (all: []),
-    defaultOverlays ? (all: []),
+    defaultAttrHook ? (all: name: config: {}),
+    defaultModules ? (all: name: []),
+    defaultOverlays ? (all: name: []),
     ...
-  }@args: all: builtins.mapAttrs (name: opts: mkNixOS name (opts // {
-    withExtra = config: let
-      general = defaultAttrHook all config;
-      specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
-    in lib.recursiveUpdate general specialized;
-    modules = opts.modules or [] ++ (defaultModules all);
-    overlays = opts.overlays or [] ++ (defaultOverlays all);
+  }@args: all: let
+    modulesFn = defaultModules all;
+    overlaysFn = defaultOverlays all;
+    attrHook = defaultAttrHook all;
+  in builtins.mapAttrs (name: opts: mkNixOS name (opts // {
+    # attrHook: apply specialized after default
+    withExtra = config:
+      let
+        general = attrHook name config;
+        specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
+      in
+        lib.recursiveUpdate general specialized;
+
+    # add default downstream modules
+    modules = opts.modules or [] ++ (modulesFn name);
+    # add default downstream overlays
+    overlays = opts.overlays or [] ++ (overlaysFn name);
   } // lib.optionalAttrs (args?defaultHostPlatform) {
-    hostPlatform = args.defaultHostPlatform;
+    # add default downstream hostPlatform
+    hostPlatform = opts.hostPlatform or args.defaultHostPlatform;
   })) all;
 in
 {
