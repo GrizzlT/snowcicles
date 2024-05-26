@@ -5,7 +5,7 @@
     lib = import ./lib inputs;
 
     mkNixOS = lib.mkNixOSes {
-      defaultAttrHook = _: name: _: {
+      defaultAttrHook = all: name: _: {
         grizz.testCheck = "${name}qsmdlfkj";
       };
     };

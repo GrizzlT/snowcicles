@@ -10,12 +10,12 @@ let
   mkNixOS = name: settings: let
     # include flake lib
     # unstable nixpkgs -> same platform + overlays
-    defaultOverlay = pkgs: self0: super: {
+    defaultOverlay = pkgs: self': super: {
       lib = super.lib.extend libOverlay;
       unstable = import inputs.unstable ({
         inherit (pkgs) config;
-        overlays = [ (self0: super: {
-          lib = super.lib.extend libOverlay;
+        overlays = [ (_: super': {
+          lib = super'.lib.extend libOverlay;
         }) ] ++ overlays;
       } // (if (buildPlatform != null && buildPlatform != hostPlatform) then {
         localSystem = buildPlatform;
@@ -76,27 +76,24 @@ let
     defaultModules ? (all: name: []),
     defaultOverlays ? (all: name: []),
     ...
-  }@args: all: let
-    modulesFn = defaultModules all;
-    overlaysFn = defaultOverlays all;
-    attrHook = defaultAttrHook all;
-  in builtins.mapAttrs (name: opts: mkNixOS name (opts // {
-    # attrHook: apply specialized after default
-    withExtra = config:
-      let
-        general = attrHook name config;
-        specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
-      in
-        lib.recursiveUpdate general specialized;
+  }@args: all: builtins.mapAttrs (name: opts: mkNixOS name (mergeRecursive [
+    {
+      # attrHook: apply specialized after default
+      withExtra = config:
+        let
+          general = defaultAttrHook all name config;
+          specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
+        in
+          lib.recursiveUpdate general specialized;
 
-    # add default downstream modules
-    modules = opts.modules or [] ++ (modulesFn name);
-    # add default downstream overlays
-    overlays = opts.overlays or [] ++ (overlaysFn name);
-  } // lib.optionalAttrs (args?defaultHostPlatform) {
-    # add default downstream hostPlatform
-    hostPlatform = opts.hostPlatform or args.defaultHostPlatform;
-  })) all;
+      # add default downstream modules
+      modules = opts.modules or [] ++ (defaultModules all name);
+      # add default downstream overlays
+      overlays = opts.overlays or [] ++ (defaultOverlays all name);
+    }
+    (builtins.removeAttrs args [ "defaultAttrHook" "defaultModules" "defaultOverlays" ])
+    (builtins.removeAttrs opts [ "withExtra" ])
+  ])) all;
 in
 {
   inherit mkNixOS;
