@@ -3,10 +3,14 @@
 
   outputs = { self, nixpkgs, ... }@inputs: let
     lib = import ./lib inputs;
+
+    mkNixOS = lib.mkNixOSes {};
   in {
     inherit lib;
 
-    nixosConfigurations.test = lib.mkNixOS "test" {};
+    nixosConfigurations = mkNixOS {
+      test = {};
+    };
   };
 
   inputs = {
