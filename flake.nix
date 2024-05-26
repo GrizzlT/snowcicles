@@ -3,18 +3,8 @@
 
   outputs = { self, nixpkgs, ... }@inputs: let
     lib = import ./lib inputs;
-
-    mkNixOS = lib.mkNixOSes {
-      defaultAttrHook = all: name: _: {
-        grizz.testCheck = "${name}qsmdlfkj";
-      };
-    };
   in {
     inherit lib;
-
-    nixosConfigurations = mkNixOS {
-      test = {};
-    };
   };
 
   inputs = {
