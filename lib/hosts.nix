@@ -28,6 +28,7 @@ let
     # all modules to include by default
     modules = []
       ++ (lib.optional settings.agenix or true inputs.agenix.nixosModules.default)
+      ++ (lib.optional settings.generators or true inputs.nixos-generators.nixosModules.all-formats)
       ++ (settings.modules or []);
 
     # overlays to be applied to nixpkgs
