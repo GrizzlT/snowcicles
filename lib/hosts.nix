@@ -26,7 +26,14 @@ let
     };
 
     # all modules to include by default
-    modules = []
+    modules = lib.pipe (builtins.readDir "${self}/modules/options") [
+      (lib.filterAttrs (_: v: v == "regular"))
+      (lib.mapAttrsToList (n: _: import "${self}/modules/options/${n}"))
+    ]
+      ++ lib.pipe (builtins.readDir "${self}/modules/configs") [
+      (lib.filterAttrs (_: v: v == "regular"))
+      (lib.mapAttrsToList (n: _: import "${self}/modules/configs/${n}"))
+    ]
       ++ (lib.optional settings.agenix or true inputs.agenix.nixosModules.default)
       ++ (lib.optional settings.generators or true inputs.nixos-generators.nixosModules.all-formats)
       ++ (settings.modules or []);
@@ -34,6 +41,7 @@ let
     # overlays to be applied to nixpkgs
     overlays = []
       ++ (lib.optional settings.agenix or true inputs.agenix.overlays.default)
+      ++ (lib.optional settings.home-manager or true (import "${inputs.home-manager}/overlay.nix"))
       ++ (settings.overlays or []);
 
     # cross compilation support
@@ -58,16 +66,10 @@ let
       inherit lib; # HACK: nixpkgs 23.11 does not auto include here lib from which `nixosSystem` is called
       modules = [
         ({ pkgs, lib, ... }: {
-          options.grizz.settings = lib.mkOption {
-            type = lib.types.attrsOf lib.types.unspecified;
-            default = {};
-          };
-          config = {
-            networking.hostName = name;
-            nixpkgs.overlays = [ (defaultOverlay pkgs) ] ++ overlays;
-            nixpkgs.hostPlatform = hostPlatform;
-            grizz.settings = settings;
-          };
+          networking.hostName = name;
+          nixpkgs.overlays = [ (defaultOverlay pkgs) ] ++ overlays;
+          nixpkgs.hostPlatform = hostPlatform;
+          grizz.settings = settings;
         })
       ]
       ++ lib.optional (buildPlatform != null) { nixpkgs.buildPlatform = buildPlatform; }
