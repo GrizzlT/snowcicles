@@ -81,27 +81,24 @@ let
   #
   # Applies defaults per configuration set. This option allows for parametrized
   # defaults based on the configuration name and the entire set.
-  mkNixOSes = {
-    defaultAttrHook ? (all: name: config: {}),
-    defaultModules ? (all: name: []),
-    defaultOverlays ? (all: name: []),
-    ...
-  }@args: all: builtins.mapAttrs (name: opts: mkNixOS name (mergeRecursive [
+  mkNixOSes = defaultsFn: all: builtins.mapAttrs (name: opts: let
+    defaults = defaultsFn all name;
+  in mkNixOS name (mergeRecursive [
     {
       # attrHook: apply specialized after default
       withExtra = config:
         let
-          general = defaultAttrHook all name config;
+          general = defaults.withExtra or (_: {}) config;
           specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
         in
           lib.recursiveUpdate general specialized;
 
       # add default downstream modules
-      modules = opts.modules or [] ++ (defaultModules all name);
+      modules = opts.modules or [] ++ defaults.modules or [];
       # add default downstream overlays
-      overlays = opts.overlays or [] ++ (defaultOverlays all name);
+      overlays = opts.overlays or [] ++ defaults.overlays or [];
     }
-    (builtins.removeAttrs args [ "defaultAttrHook" "defaultModules" "defaultOverlays" ])
+    (builtins.removeAttrs defaults [ "withExtra" "modules" "overlays" ])
     (builtins.removeAttrs opts [ "withExtra" ])
   ])) all;
 in
