@@ -1,11 +1,11 @@
 { self, ... }@inputs:
 let
-  libOverlay = _: _: {
-    grizz = self.lib.nixos;
+  libOverlay = self': super': {
+    grizz = self.lib.nixosOverlay self' super';
   };
 
   lib = inputs.nixpkgs.lib.extend libOverlay; # NOTE: in the latest version, this should be enough to achieve the hack below
-  mergeRecursive = builtins.foldl' lib.recursiveUpdate {};
+  inherit (self.lib) mergeRecursive;
 
   mkNixOS = name: settings: let
     # include flake lib
@@ -26,13 +26,13 @@ let
     };
 
     # all modules to include by default
-    modules = lib.pipe (builtins.readDir "${self}/modules/options") [
+    modules = lib.pipe (builtins.readDir "${self}/modules/nixos/options") [
       (lib.filterAttrs (_: v: v == "regular"))
-      (lib.mapAttrsToList (n: _: import "${self}/modules/options/${n}"))
+      (lib.mapAttrsToList (n: _: import "${self}/modules/nixos/options/${n}"))
     ]
-      ++ lib.pipe (builtins.readDir "${self}/modules/configs") [
+      ++ lib.pipe (builtins.readDir "${self}/modules/nixos/configs") [
       (lib.filterAttrs (_: v: v == "regular"))
-      (lib.mapAttrsToList (n: _: import "${self}/modules/configs/${n}"))
+      (lib.mapAttrsToList (n: _: import "${self}/modules/nixos/configs/${n}"))
     ]
       ++ (lib.optional settings.agenix or true inputs.agenix.nixosModules.default)
       ++ (lib.optional settings.generators or true inputs.nixos-generators.nixosModules.all-formats)
@@ -57,7 +57,7 @@ let
       finalSet
       {
         extendModules = args: withExtraAttrs (finalSet.extendModules args);
-        grizz = { inherit settings overlays; };
+        grizz = { inherit settings; };
       }
       (extraAttrHook finalSet)
     ];
@@ -72,8 +72,8 @@ let
           grizz.settings = settings;
         })
       ]
-      ++ lib.optional (buildPlatform != null) { nixpkgs.buildPlatform = buildPlatform; }
-      ++ modules;
+        ++ lib.optional (buildPlatform != null) { nixpkgs.buildPlatform = buildPlatform; }
+        ++ modules;
     };
   in withExtraAttrs configuration;
 
@@ -106,6 +106,5 @@ let
   ])) all;
 in
 {
-  inherit mkNixOS;
-  inherit mkNixOSes;
+  inherit mkNixOS mkNixOSes;
 }
