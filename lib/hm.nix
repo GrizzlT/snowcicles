@@ -64,35 +64,32 @@ let
   #
   # Applies defaults per configuration set. This option allows for parametrized
   # defaults based on the configuration name and the entire set.
-  mkHmManagers = {
-    defaultAttrHook ? (all: name: config: {}),
-    defaultModules ? (all: name: host: []),
-    defaultOverlays ? (all: name: host: []),
-    ...
-  }@args: all: let
-    singleHm = name: host: opts: {
+  mkHmManagers = { hosts ? {}, defaults ? (_: _: _: {}) }: all: let
+    singleHm = name: host: opts: let
+      defaultOpts = defaults all name host;
+    in {
       name = "${name}@${host.name}";
       value = mkHomeManager "${name}@${host.name}" (mergeRecursive [
-        (builtins.removeAttrs args [ "defaultAttrHook" "defaultModules" "defaultOverlay" "hosts" ])
+        (builtins.removeAttrs defaultOpts [ "withExtra" "modules" "overlays" ])
         {
           withExtra = config:
             let
-              general = defaultAttrHook all name config;
+              general = defaultOpts.withExtra or (_: {}) config;
               specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
             in
               lib.recursiveUpdate general specialized;
-          modules = opts.modules or [] ++ (defaultModules all name host);
-          overlays = opts.overlays or [] ++ (defaultOverlays all name host);
+          modules = opts.modules or [] ++ defaultOpts.modules or [];
+          overlays = opts.overlays or [] ++ defaultOpts.overlays or [];
           hostname = host.name;
         }
-        (builtins.removeAttrs opts [ "withExtra" "hosts" ])
+        (builtins.removeAttrs opts [ "withExtra" "hosts" "modules" "overlays" ])
       ]);
     };
   in builtins.listToAttrs (lib.foldlAttrs (acc: name: opts: let
-    hosts = lib.attrsToList (args.hosts or {} // opts.hosts or {});
-    configs = map (host: singleHm name host (opts // {
+    configHosts = lib.attrsToList (hosts // opts.hosts or {});
+    configs = map (host: singleHm name host ({
       system = host.value;
-    })) hosts;
+    } // opts)) configHosts;
   in acc ++ configs) [] all);
 in
 {

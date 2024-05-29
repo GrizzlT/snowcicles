@@ -99,7 +99,7 @@ let
       overlays = opts.overlays or [] ++ defaults.overlays or [];
     }
     (builtins.removeAttrs defaults [ "withExtra" "modules" "overlays" ])
-    (builtins.removeAttrs opts [ "withExtra" ])
+    (builtins.removeAttrs opts [ "withExtra" "modules" "overlays" ])
   ])) all;
 in
 {
