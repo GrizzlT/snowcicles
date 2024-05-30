@@ -78,8 +78,8 @@ let
               specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
             in
               lib.recursiveUpdate general specialized;
-          modules = opts.modules or [] ++ defaultOpts.modules or [];
-          overlays = opts.overlays or [] ++ defaultOpts.overlays or [];
+          modules = defaultOpts.modules or [] ++ opts.modules or [];
+          overlays = defaultOpts.overlays or [] ++ opts.overlays or [];
           hostname = host.name;
         }
         (builtins.removeAttrs opts [ "withExtra" "hosts" "modules" "overlays" ])

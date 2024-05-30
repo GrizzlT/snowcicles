@@ -94,9 +94,9 @@ let
           lib.recursiveUpdate general specialized;
 
       # add default downstream modules
-      modules = opts.modules or [] ++ defaults.modules or [];
+      modules = defaults.modules or [] ++ opts.modules or [];
       # add default downstream overlays
-      overlays = opts.overlays or [] ++ defaults.overlays or [];
+      overlays = defaults.overlays or [] ++ opts.overlays or [];
     }
     (builtins.removeAttrs defaults [ "withExtra" "modules" "overlays" ])
     (builtins.removeAttrs opts [ "withExtra" "modules" "overlays" ])
