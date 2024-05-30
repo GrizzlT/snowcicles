@@ -41,7 +41,6 @@ let
     # overlays to be applied to nixpkgs
     overlays = []
       ++ (lib.optional settings.agenix or true inputs.agenix.overlays.default)
-      ++ (lib.optional settings.home-manager or true (import "${inputs.home-manager}/overlay.nix"))
       ++ (settings.overlays or []);
 
     # cross compilation support
