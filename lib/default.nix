@@ -5,10 +5,12 @@ let
   nixosOverlay = import ./nixos-overlay.nix inputs;
   hmOverlay = import ./hm-overlay.nix inputs;
 
+  mkProfiles = import ./profiles.nix inputs;
+
   lib = nixpkgs.lib;
 in
 {
-  inherit nixosOverlay hmOverlay;
+  inherit nixosOverlay hmOverlay mkProfiles;
 
   mergeRecursive = builtins.foldl' lib.recursiveUpdate {};
 }
