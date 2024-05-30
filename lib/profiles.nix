@@ -6,6 +6,7 @@ let
       in
         builtins.mapAttrs (_: v: pkgs.callPackage v { inherit mkProfile; }) profiles;
     defs = profiles;
+    inherit basePathEnvDefault;
   };
 in
   mkProfiles
