@@ -5,6 +5,8 @@
     lib = import ./lib inputs;
   in {
     inherit lib;
+
+    overlays.default = import ./overlay lib;
   };
 
   inputs = {
