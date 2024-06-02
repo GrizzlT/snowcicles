@@ -6,7 +6,9 @@
   in {
     inherit lib;
 
-    overlays.default = import ./overlay lib;
+    overlays.default = import ./overlay.nix lib;
+
+    tests = import ./tests inputs;
   };
 
   inputs = {

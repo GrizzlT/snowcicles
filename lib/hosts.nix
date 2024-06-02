@@ -44,7 +44,7 @@ let
       ++ (settings.overlays or []);
 
     # cross compilation support
-    hostPlatform = settings.system or (settings.hostPlatform or { system = "x86_64-linux"; });
+    hostPlatform = settings.hostPlatform or (settings.system or { system = "x86_64-linux"; });
     buildPlatform = if (settings ? hostPlatform) then settings.buildPlatform or "x86_64-linux" else settings.buildPlatform or null;
 
     # extra attrs
@@ -81,25 +81,27 @@ let
   # Applies defaults per configuration set. This option allows for parametrized
   # defaults based on the configuration name and the entire set.
   mkNixOSes = defaultsFn: all: builtins.mapAttrs (name: opts: let
-    defaults = defaultsFn all name;
-  in mkNixOS name (mergeRecursive [
-    {
-      # attrHook: apply specialized after default
-      withExtra = config:
-        let
-          general = defaults.withExtra or (_: {}) config;
-          specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
-        in
-          lib.recursiveUpdate general specialized;
+    settings = (self: let
+      defaults = defaultsFn all name self;
+    in mergeRecursive [
+      {
+        agenix = true;
+        generators = true;
+        system = "x86_64-linux";
 
-      # add default downstream modules
-      modules = defaults.modules or [] ++ opts.modules or [];
-      # add default downstream overlays
-      overlays = defaults.overlays or [] ++ opts.overlays or [];
-    }
-    (builtins.removeAttrs defaults [ "withExtra" "modules" "overlays" ])
-    (builtins.removeAttrs opts [ "withExtra" "modules" "overlays" ])
-  ])) all;
+        withExtra = config:
+          let
+            general = defaults.withExtra or (_: {}) config;
+            specialized = opts.withExtra or (_: {}) (lib.recursiveUpdate config general);
+          in
+            lib.recursiveUpdate general specialized;
+        modules = defaults.modules or [] ++ opts.modules or [];
+        overlays = defaults.overlays or [] ++ opts.overlays or [];
+      }
+      (builtins.removeAttrs defaults [ "withExtra" "modules" "overlays" ])
+      (builtins.removeAttrs opts [ "withExtra" "modules" "overlays" ])
+    ]) settings;
+  in mkNixOS name settings) all;
 in
 {
   inherit mkNixOS mkNixOSes;
