@@ -50,13 +50,15 @@ let
     # extra attrs
     extraAttrHook = settings.withExtra or (_: {});
 
+    settingsToInclude = builtins.removeAttrs settings [ "_callInternal" ];
+
     # Enable configuration extendModules
     # add grizz metadata
     withExtraAttrs = finalSet: mergeRecursive [
       finalSet
       {
         extendModules = args: withExtraAttrs (finalSet.extendModules args);
-        grizz = { inherit settings; };
+        grizz = { settings = settingsToInclude; };
       }
       (extraAttrHook finalSet)
     ];
@@ -68,13 +70,17 @@ let
           networking.hostName = name;
           nixpkgs.overlays = [ (defaultOverlay pkgs) ] ++ overlays;
           nixpkgs.hostPlatform = hostPlatform;
-          grizz.settings = settings;
+          grizz.settings = settingsToInclude;
         })
       ]
         ++ lib.optional (buildPlatform != null) { nixpkgs.buildPlatform = buildPlatform; }
         ++ modules;
     };
-  in withExtraAttrs configuration;
+  in
+    lib.warnIfNot settings._callInternal or false ''
+      `mkNixOS` was probably called by accident, consider using `mkNixOSes` instead.
+      If this method was used on purpose, make sure to pass `_callInternal` as true.
+    '' (withExtraAttrs configuration);
 
   # General wrapper for downstream usage
   #
@@ -88,6 +94,7 @@ let
         agenix = true;
         generators = true;
         system = "x86_64-linux";
+        _callInternal = true; # avoid accidentally calling exposed `mkNixOS` function.
 
         withExtra = config:
           let
