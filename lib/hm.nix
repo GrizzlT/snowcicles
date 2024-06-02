@@ -66,12 +66,14 @@ let
   # defaults based on the configuration name and the entire set.
   mkHmManagers = { hosts ? {}, defaults ? (_: _: _: {}) }: all: let
     singleHm = name: host: opts: let
-      defaultOpts = defaults all name host;
-    in {
-      name = "${name}@${host.name}";
-      value = mkHomeManager "${name}@${host.name}" (mergeRecursive [
+      settings = (self: let
+        defaultOpts = defaults all name self;
+      in mergeRecursive [
         (builtins.removeAttrs defaultOpts [ "withExtra" "modules" "overlays" ])
         {
+          hostname = host.name;
+          system = host.value;
+
           withExtra = config:
             let
               general = defaultOpts.withExtra or (_: {}) config;
@@ -80,16 +82,16 @@ let
               lib.recursiveUpdate general specialized;
           modules = defaultOpts.modules or [] ++ opts.modules or [];
           overlays = defaultOpts.overlays or [] ++ opts.overlays or [];
-          hostname = host.name;
         }
         (builtins.removeAttrs opts [ "withExtra" "hosts" "modules" "overlays" ])
-      ]);
+      ]) settings;
+    in {
+      name = "${name}@${host.name}";
+      value = mkHomeManager "${name}@${host.name}" settings;
     };
   in builtins.listToAttrs (lib.foldlAttrs (acc: name: opts: let
     configHosts = lib.attrsToList (hosts // opts.hosts or {});
-    configs = map (host: singleHm name host ({
-      system = host.value;
-    } // opts)) configHosts;
+    configs = map (host: singleHm name host opts) configHosts;
   in acc ++ configs) [] all);
 in
 {
