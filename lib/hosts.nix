@@ -93,6 +93,7 @@ let
       {
         agenix = true;
         generators = true;
+        tailscale = true;
         system = (self.hostPlatform or { system = "x86_64-linux"; }).system;
         _callInternal = true; # avoid accidentally calling exposed `mkNixOS` function.
 
