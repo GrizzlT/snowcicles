@@ -79,7 +79,7 @@ let
   in
     lib.warnIfNot settings._callInternal or false ''
       `mkNixOS` was probably called by accident, consider using `mkNixOSes` instead.
-      If this method was used on purpose, make sure to pass `_callInternal` as true.
+      If this function was used on purpose, make sure to pass `_callInternal` as true.
     '' (withExtraAttrs configuration);
 
   # General wrapper for downstream usage
@@ -105,8 +105,8 @@ let
         modules = defaults.modules or [] ++ opts.modules or [];
         overlays = defaults.overlays or [] ++ opts.overlays or [];
       }
-      (builtins.removeAttrs defaults [ "withExtra" "modules" "overlays" ])
-      (builtins.removeAttrs opts [ "withExtra" "modules" "overlays" ])
+      (builtins.removeAttrs defaults [ "withExtra" "modules" "overlays" "_callInternal" ])
+      (builtins.removeAttrs opts [ "withExtra" "modules" "overlays" "_callInternal" ])
     ]) settings;
   in mkNixOS name settings) all;
 in

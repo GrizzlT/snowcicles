@@ -37,11 +37,13 @@ let
 
     extraAttrHook = settings.withExtra or (_: {});
 
+    settingsToInclude = builtins.removeAttrs settings [ "_callInternal" ];
+
     withExtraAttrs = finalSet: mergeRecursive [
       finalSet
       {
         extendModules = args: withExtraAttrs (finalSet.extendModules args);
-        grizz = { inherit settings; };
+        grizz = { settings = settingsToInclude; };
       }
       (extraAttrHook finalSet)
     ];
@@ -52,13 +54,16 @@ let
       modules = [
         ({ pkgs, lib, ... }: {
           nixpkgs.overlays = [ (defaultOverlay pkgs) ] ++ overlays;
-          grizz.settings = settings;
+          grizz.settings = settingsToInclude;
         })
       ]
         ++ modules;
     };
   in
-    withExtraAttrs configuration;
+    lib.warnIfNot settings._callInternal or false ''
+      `mkHomeManager` was probably called by accident, consider using `mkHmManagers` instead.
+      If this function was used on purpose, make sure to pass `_callInternal` as true.
+    '' withExtraAttrs configuration;
 
   # General wrapper for downstream usage
   #
@@ -69,10 +74,11 @@ let
       settings = (self: let
         defaultOpts = defaults all name self;
       in mergeRecursive [
-        (builtins.removeAttrs defaultOpts [ "withExtra" "modules" "overlays" ])
+        (builtins.removeAttrs defaultOpts [ "withExtra" "modules" "overlays" "_callInternal" ])
         {
           hostname = host.name;
           system = host.value;
+          _callInternal = true;
 
           withExtra = config:
             let
@@ -83,7 +89,7 @@ let
           modules = defaultOpts.modules or [] ++ opts.modules or [];
           overlays = defaultOpts.overlays or [] ++ opts.overlays or [];
         }
-        (builtins.removeAttrs opts [ "withExtra" "hosts" "modules" "overlays" ])
+        (builtins.removeAttrs opts [ "withExtra" "hosts" "modules" "overlays" "_callInternal" ])
       ]) settings;
     in {
       name = "${name}@${host.name}";
