@@ -8,7 +8,7 @@ let
         home = {
           username = "${settings.moduleOpt or name}";
           homeDirectory = "/home/default";
-          stateVersion = "23.11";
+          stateVersion = "24.05";
         };
       }];
       overlays = [ (_: _: { testOpt = settings.overlayOpt or "abc"; })];
