@@ -6,9 +6,9 @@ final: prev: let
       rustc = toolchain;
     };
 in {
-  lib = final.lib // {
+  lib = prev.lib // {
     grizz = selfLib;
-
-    rayfish = final.callPackage ./pkgs/rayfish.nix { inherit rustPlatform; };
   };
+
+  rayfish = final.callPackage ./pkgs/rayfish.nix { inherit rustPlatform; };
 }
