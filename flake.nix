@@ -24,7 +24,10 @@
   in {
     inherit lib;
 
-    overlays.default = import ./overlay.nix lib;
+    overlays.default = nixpkgs.lib.composeManyExtensions  [
+      inputs.rust-overlay.overlays.default
+      (import ./overlay.nix lib)
+    ];
 
     tests = import ./tests inputs;
 
@@ -58,6 +61,8 @@
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    rust-overlay.url = "github:oxalica/rust-overlay";
 
     home-manager = {
       # url = "github:GrizzlT/home-manager/release-23.11-patched";
