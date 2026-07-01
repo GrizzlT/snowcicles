@@ -22,6 +22,7 @@ rustPlatform.buildRustPackage rec {
     description = "P2P mesh VPN powered by iroh — connects peers by cryptographic identity";
     homepage = "https://github.com/rayfish/rayfish";
     license = licenses.mpl20;
+    mainProgram = "ray";
   };
 }
 
