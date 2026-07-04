@@ -4,17 +4,17 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "rayfish";
-  version = "nightly-9c8e68a";
+  version = "nightly-adced14";
 
   src = fetchFromGitHub {
     owner = "GrizzlT";
     repo = pname;
     # tag = "v0.1.3";
-    rev = "9c8e68aedb0a16678b250eb84731860ce0387e89";
-    hash = "sha256-qGhxE3oYpPTkIdd9AmZstAA8mTUvkjuBNm2BDCKr5Jw=";
+    rev = "adced14a1717f2e691eb544f226c5f5542656623";
+    hash = "sha256-UXeasZ1NWEYxVAcrjC9OBuNFBtRJXQonTJKQT6sBsmA=";
   };
 
-  cargoHash = "sha256-fVz+l1D5hupGN6YfMJI0FLFVttRjkxZc+8tBmabu1J4=";
+  cargoHash = "sha256-9vyH7u53AQNwBbrjnvOil3kDMykFjJBat5CPXyO1jfY=";
 
   doCheck = false;
 
