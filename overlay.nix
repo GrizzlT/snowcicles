@@ -11,4 +11,5 @@ in {
   };
 
   rayfish = final.callPackage ./pkgs/rayfish.nix { inherit rustPlatform; };
+  wiresneak = final.callPackage ./pkgs/wiresneak.nix { inherit rustPlatform; };
 }
