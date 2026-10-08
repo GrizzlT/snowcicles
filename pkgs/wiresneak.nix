@@ -10,8 +10,8 @@ rustPlatform.buildRustPackage {
   src = fetchFromGitHub {
     owner = "GrizzlT";
     repo = "wiresneak";
-    rev = "f73ff22fe580ffac53fe7aec5416506b20c31012";               # pin a specific commit
-    hash = "sha256-IRkaaC1evdUCviqPrN382+vqZzRI1SH5dC+fhGc//Co=";                # replace after first build
+    rev = "b4a45fd3a097f42783fd9f11ff7c218f70de96e9";               # pin a specific commit
+    hash = "sha256-hxfMaVtp8OvpXiZOdJZcEHF/FSmy+l8uClGEknW1Fvo=";                # replace after first build
   };
 
   cargoHash = "sha256-kwHxIc7bLtaneMkz/x2tLKXUvCTOPHbQqHYTLH/pYcM=";             # replace after first build
